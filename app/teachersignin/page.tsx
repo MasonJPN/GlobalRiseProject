@@ -27,7 +27,7 @@ export default function TeacherSignIn(){
     const [adminMode, setAdminMode] = useState(false)
     const [teacherList, setTeacherList] = useState<Teacher[]>(teachers)
     const [teacherStatus, setTeacherStatus] = useState<Record<number, TeacherStatus>>({})
-    const [teachersHours, setTeachersHours] = useState<Record<number, number>>({})
+    const [teachersHours, setTeachersHours] = useState<Record<number, Record<string, number>>>({})
     const [currentTime, setCurrentTime] = useState("")
     const [adminModal, setAdminModal] = useState(false)
     const [modalUsername, setModalUsername] = useState("")
@@ -54,7 +54,14 @@ export default function TeacherSignIn(){
         const clockInTime = teacherStatus[id]?.clockInTime
         if (!clockInTime) return
         const hoursWorked = (Date.now() - clockInTime) / 3600000
-        setTeachersHours((prev) => ({...prev, [id]: (prev[id] || 0) + hoursWorked}))
+        const today = new Date().toLocaleDateString("en-CA")
+        setTeachersHours((prev) => ({
+            ...prev,
+            [id]: {
+                ...prev[id],
+                [today]: (prev[id]?.[today] || 0) + hoursWorked
+            }
+        }))
         setTeacherStatus((prev) => ({...prev, [id]: {
             status: "out",
             clockInTime: null
@@ -106,9 +113,9 @@ export default function TeacherSignIn(){
                         <div>
                             <p className="text-xl font-semibold text-gray-800">{teacher.lastName} {teacher.firstName}</p>
                             <p className="text-sm text-gray-400">{teacherStatus[teacher.id]?.status === "in" ? "🟢 Clocked In" : "⚪ Clocked Out"}</p>
-                            {teachersHours[teacher.id] !== undefined && (
+                            {teachersHours[teacher.id] && (
                                 <p className="text-sm text-blue-400 font-medium">
-                                    Total: {teachersHours[teacher.id].toFixed(2)} hrs
+                                    Total: {Object.values(teachersHours[teacher.id]).reduce((a, b) => a + b, 0).toFixed(2)} hrs
                                 </p>
                             )}
                         </div>
@@ -142,6 +149,41 @@ export default function TeacherSignIn(){
                         </div>
                     </div>
                 ))}
+
+                {adminMode && (
+                    <div className="bg-white rounded-2xl px-6 py-6 shadow-sm border border-gray-100 flex flex-col gap-4">
+                        <h2 className="text-xl font-bold text-gray-800"> Teacher Hours Breakdown</h2>
+                        {teacherList.map((teacher) => {
+                            const days = teachersHours[teacher.id] || {}
+                            const total = Object.values(days).reduce((a, b) => a + b, 0)
+                            return (
+                                <div key={teacher.id} className="flex flex-col gap-10">
+                                    <p className="font-semibold text-gray-700">{teacher.lastName} {teacher.firstName}</p>
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="text-left text-gray-400 border-b border-gray-100">
+                                                <th className="pb-1">Date</th>
+                                                <th className="pb-1">Hours</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {Object.entries(days).map(([date, hours]) => (
+                                                <tr key={date} className="border-b border-gray-50">
+                                                    <td className="py-1 text-gray-600">{date}</td>
+                                                    <td className="py-1 text-gray-600">{hours.toFixed(2)} hrs</td>
+                                                </tr>
+                                            ))}
+                                            <tr className="font-semibold text-blue-400">
+                                                <td className="pt-2">Total</td>
+                                                <td className="pt-2">{total.toFixed(2)} hrs</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
 
                 {adminMode && (
                     <div className="bg-white rounded-2xl px-6 py-4 shadow-sm border border-gray-300 flex items-center gap-4">

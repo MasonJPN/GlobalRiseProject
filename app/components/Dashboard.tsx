@@ -24,7 +24,9 @@ export default function Dashboard(){
                     </Link>
                 </button>
                 <button className="bg-white h-30 w-200 text-black text-4xl rounded-3xl">
+                    <Link href="/drivers">
                     DRIVER
+                    </Link>
                 </button>
                 <button className="bg-white h-30 w-200 text-black text-4xl rounded-3xl">
                     <Link href="/teachersignin">
