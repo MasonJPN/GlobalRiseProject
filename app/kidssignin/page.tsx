@@ -1,18 +1,24 @@
 'use client'
 import {useState} from "react"
+import Link from "next/link"
+
 
 type Kid = {
   id: number;
   firstName: string;
   lastName: string;
+  email: string
 };
 
+
+
+
 const kids: Kid[] = [
-  { id: 1, firstName: "Yuki", lastName: "Tanaka" },
-  { id: 2, firstName: "Hana", lastName: "Sato" },
-  { id: 3, firstName: "Kenji", lastName: "Yamamoto" },
-  { id: 4, firstName: "Aoi", lastName: "Nakamura" },
-  { id: 5, firstName: "Ren", lastName: "Kobayashi" },
+  { id: 1, firstName: "Yuki", lastName: "Tanaka", email: "mfancher02@gmail.com" },
+  { id: 2, firstName: "Hana", lastName: "Sato", email: "mfancher02@gmail.com" },
+  { id: 3, firstName: "Kenji", lastName: "Yamamoto", email: "mfancher02@gmail.com" },
+  { id: 4, firstName: "Aoi", lastName: "Nakamura", email: "mfancher02@gmail.com" },
+  { id: 5, firstName: "Ren", lastName: "Kobayashi", email: "mfancher02@gmail.com"},
 ];
 
 export default function KidsSignin() {
@@ -29,16 +35,30 @@ const ADMIN_PASSWORD = "1234"
   const [modalPassword, setModalPassword] = useState("")
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
-
+  const [studentEmail, setStudentEmail] = useState("")
+  const [toast, setToast] = useState(false)
+  const [toastMsg, setToastMsg] = useState("")
 
 
 //This is sign in / out for kids
   function handleSignIn(id: number){
-    setStatus((prev) => ({...prev, [id]: "in" }))
+    const kid = kidsList.find((k) => k.id === id)
+    setStatus((prev) => ({...prev, [id]: "in" })),
+    setToast(true)
+    setToastMsg(`${kid?.lastName} ${kid?.firstName} signed in successfully.  ✅`)
+    setTimeout(() => {
+      setToast(false)
+    },4000)
   }
 
   function handleSignOut(id: number){
+    const kid = kidsList.find((k) => k.id === id)
     setStatus((prev) => ({...prev, [id]: "out"}))
+    setToast(true)
+    setToastMsg(`${kid?.lastName} ${kid?.firstName} signed out successfully.`)
+    setTimeout(() => {
+      setToast(false)
+    }, 4000)
   }
 
 
@@ -57,10 +77,12 @@ const ADMIN_PASSWORD = "1234"
     setKidsList((prev) => [...prev, {
     id: Date.now(),
     firstName: firstName,
-    lastName: lastName
+    lastName: lastName,
+    email: studentEmail
   }])
   setFirstName("")
   setLastName("")
+  setStudentEmail("")
 }
  
   function handleAdminSignout(){
@@ -70,7 +92,16 @@ const ADMIN_PASSWORD = "1234"
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <h1 className="text-4xl font-bold text-center text-gray-800 mb-10">
+
+      <div>
+        <Link href="/" className="absolute top-6 left-6 text-gray-600 hover:text-gray-900 font-medium text-xl">
+        ← Back
+        </Link>
+      </div>
+
+
+
+      <h1 className="text-6xl font-bold text-center text-gray-800 mb-20 mt-10">
         Student Sign-In / Sign-Out
       </h1>
 
@@ -126,6 +157,12 @@ const ADMIN_PASSWORD = "1234"
                  onChange={(e) => setLastName(e.target.value)}
                  className="border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 flex-1"
                 />
+            <input
+                placeholder="Guardian Email"
+                value={studentEmail}
+                onChange={((e) => setStudentEmail(e.target.value))}
+                className="border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 flex-1"
+            />
             <button
                 onClick={handleAddStudent}
                 className="px-5 py-2 rounded-xl text-sm font-semibold bg-blue-400 text-white hover:bg-blue-500">
@@ -135,10 +172,10 @@ const ADMIN_PASSWORD = "1234"
 )}
 
 
-        {editMode ? (<button className="px-5 py-2 text-2xl rounded-xl bg-blue-400"
+        {editMode ? (<button className="px-5 py-2 text-2xl rounded-xl bg-blue-400 text-white"
                         onClick={handleAdminSignout}>
                  Admin Logout
-        </button>) : (<button className="px-5 py-2 text-2xl rounded-xl bg-blue-400"
+        </button>) : (<button className="px-5 py-2 text-2xl rounded-xl bg-blue-400 text-white"
                 onClick={() => setIsModalOpen(true)}>
                  Edit
         </button>)}
@@ -187,7 +224,12 @@ const ADMIN_PASSWORD = "1234"
         </div>
                 )}
 
-        
+               {toast && (
+                <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-white border border-gray-100 shadow-xl rounded-2xl px-8 py-10 flex items-center gap-3 z-50">
+                 <p className="text-gray-800 font-medium text-2xl">{toastMsg}</p>
+                </div>
+                )}
+
     </div>
   );
 }

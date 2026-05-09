@@ -4,7 +4,7 @@ import Dashboard from "./components/Dashboard";
 export default function Home() {
   return (
     <div>
-      <main>
+      <main className="bg-[#d2f7fd]">
         <Dashboard/>
       </main>
     </div>
