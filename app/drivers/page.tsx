@@ -102,12 +102,12 @@ export default function Drivers(){
 
             <div className="max-w-2xl mx-auto flex flex-col gap-8">
                 {schools.map((school) => (
-                    <div key={school.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden gap-10">
+                    <div key={school.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden gap-10 py-9 ">
                         <button
                             onClick={() => setOpenedSchool(openedSchool === school.id ? null : school.id)}
                             className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
                         >
-                            <span className="text-xl font-semibold text-gray-800">{school.schoolName}</span>
+                            <span className="text-2xl font-semibold text-gray-800">{school.schoolName}</span>
                             <span className="text-gray-400 text-lg">{openedSchool === school.id ? "▲" : "▼"}</span>
                         </button>
 

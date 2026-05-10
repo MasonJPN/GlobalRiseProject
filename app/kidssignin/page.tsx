@@ -1,33 +1,24 @@
 'use client'
-import {useState} from "react"
+import {useState, useEffect} from "react"
 import Link from "next/link"
-
+import { db } from "@/lib/firebase"
+import { collection, onSnapshot, addDoc, deleteDoc, doc} from "firebase/firestore"
 
 type Kid = {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string
 };
 
 
-
-
-const kids: Kid[] = [
-  { id: 1, firstName: "Yuki", lastName: "Tanaka", email: "mfancher02@gmail.com" },
-  { id: 2, firstName: "Hana", lastName: "Sato", email: "mfancher02@gmail.com" },
-  { id: 3, firstName: "Kenji", lastName: "Yamamoto", email: "mfancher02@gmail.com" },
-  { id: 4, firstName: "Aoi", lastName: "Nakamura", email: "mfancher02@gmail.com" },
-  { id: 5, firstName: "Ren", lastName: "Kobayashi", email: "mfancher02@gmail.com"},
-];
-
 export default function KidsSignin() {
 
 const ADMIN_USERNAME = "admin"
 const ADMIN_PASSWORD = "1234"
 
-  const [kidsList, setKidsList] = useState<Kid[]>(kids)
-  const [status, setStatus] = useState<Record<number, "in" | "out">>({})
+  const [kidsList, setKidsList] = useState<Kid[]>([])
+  const [status, setStatus] = useState<Record<string, "in" | "out">>({})
   const [admin, setAdmin] = useState(false)  
   const [editMode, setEditMode] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -41,7 +32,7 @@ const ADMIN_PASSWORD = "1234"
 
 
 //This is sign in / out for kids
-  function handleSignIn(id: number){
+  function handleSignIn(id: string){
     const kid = kidsList.find((k) => k.id === id)
     setStatus((prev) => ({...prev, [id]: "in" })),
     setToast(true)
@@ -51,7 +42,7 @@ const ADMIN_PASSWORD = "1234"
     },4000)
   }
 
-  function handleSignOut(id: number){
+  function handleSignOut(id: string){
     const kid = kidsList.find((k) => k.id === id)
     setStatus((prev) => ({...prev, [id]: "out"}))
     setToast(true)
@@ -69,20 +60,19 @@ const ADMIN_PASSWORD = "1234"
 
   }
 
-  function handleRemoveStudent(id:number){
-    setKidsList((prev) => prev.filter((kids) => kids.id !== id) )
+  async function handleRemoveStudent(id:string ){
+    await deleteDoc(doc(db, "GlobalRise Students", id))
   }
 
-  function handleAddStudent(){
-    setKidsList((prev) => [...prev, {
-    id: Date.now(),
-    firstName: firstName,
-    lastName: lastName,
-    email: studentEmail
-  }])
-  setFirstName("")
-  setLastName("")
-  setStudentEmail("")
+  async function handleAddStudent(){
+    await addDoc(collection(db, "GlobalRise Students"), {
+        firstName: firstName,
+        lastName: lastName,
+        email: studentEmail
+    })
+    setFirstName("")
+    setLastName("")
+    setStudentEmail("")
 }
  
   function handleAdminSignout(){
@@ -90,8 +80,31 @@ const ADMIN_PASSWORD = "1234"
     setAdmin(false)
   }
 
+
+
+  //this is for the firebase Firestore to update the kids 
+    useEffect(() => {
+      
+    const unsubscribe = onSnapshot(collection(db, "GlobalRise Students"), (snapshot) => {
+      console.log("snapshot received", snapshot.docs.length)
+        const studentsData = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data()
+        })) as Kid[]
+        setKidsList(studentsData)
+        
+    })
+    return () => unsubscribe()
+}, [])
+
+
+
+
+
+
+
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-[#ffffff] p-8">
 
       <div>
         <Link href="/" className="absolute top-6 left-6 text-gray-600 hover:text-gray-900 font-medium text-xl">
@@ -102,23 +115,23 @@ const ADMIN_PASSWORD = "1234"
 
 
       <h1 className="text-6xl font-bold text-center text-gray-800 mb-20 mt-10">
-        Student Sign-In / Sign-Out
+        Hello / こんにちは!
       </h1>
 
-      <div className="max-w-2xl mx-auto flex flex-col gap-4">
+      <div className="max-w-2xl mx-auto flex flex-col gap-10">
         {kidsList.map(kid => {
           const s = status[kid.id]
           return (
             <div
               key={kid.id}
-              className="flex items-center justify-between bg-white rounded-2xl px-6 py-4 shadow-sm border border-gray-100"
+              className="flex items-center justify-between bg-white rounded-2xl px-6 py-10 shadow-sm border border-gray-100"
             >
-              <p className="text-xl font-semibold text-gray-800">
+              <p className="text-2xl font-semibold text-gray-800">
                 {kid.lastName} {kid.firstName}
               </p>
 
               <div className="flex gap-3">
-                <button className={`px-5 py-2 rounded-xl text-sm font-semibold
+                <button className={`px-5 py-2 rounded-xl text-md font-semibold
                      ${ s === "in" ? "bg-green-500 text-white" :  "bg-green-100 text-green-700 hover:bg-green-200"}`}
                         onClick={() => handleSignIn(kid.id)}
                         >
@@ -127,7 +140,7 @@ const ADMIN_PASSWORD = "1234"
                 <button 
                     onClick={() => handleSignOut(kid.id)}
                     className={`px-5 py-2 rounded-xl text-sm font-semibold
-                          ${s === "out" ? "bg-red-400 text-white" : "bg-red-100 text-red-500 hover:bg-red-200"}`}>
+                          ${s === "out" ? "bg-red-500 text-white" : "bg-red-100 text-red-500 hover:bg-red-200"}`}>
                   Sign Out
                 </button>
 
@@ -144,7 +157,7 @@ const ADMIN_PASSWORD = "1234"
 
 
         {editMode && (
-        <div className="bg-white rounded-2xl mt-20 px-6 py-4 shadow-sm border border-gray-300 flex items-center gap-4 text-black">
+        <div className="bg-white rounded-2xl w-220 mt-20 px-6 py-4 shadow-sm border border-gray-300 flex items-center gap-4 text-black">
              <input
                  placeholder="First Name"
                  value={firstName}

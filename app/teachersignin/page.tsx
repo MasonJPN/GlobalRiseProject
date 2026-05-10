@@ -18,7 +18,7 @@ const ADMIN_USERNAME = "admin"
 const ADMIN_PASSWORD = "1234"
 
 const teachers: Teacher[] = [
-    {id: 1, lastName: "Arya", firstName: "Hisamu", email: "hisamuArya@gmail.com"},
+    {id: 1, lastName: "Miyata", firstName: "Hisamu", email: "hisamuArya@gmail.com"},
     {id: 2, lastName: "Fancher", firstName: "Mason", email: "mfancher02@gmail.com"}
 ]
 
@@ -102,6 +102,9 @@ export default function TeacherSignIn(){
                 ← Back
             </Link>
 
+            
+            
+
             <div className="text-center mb-16 mt-10">
                 <p className="text-8xl font-bold text-gray-800 tracking-widest">{currentTime}</p>
                 <p className="text-gray-400 mt-2 text-lg">{new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
@@ -158,7 +161,7 @@ export default function TeacherSignIn(){
                             const total = Object.values(days).reduce((a, b) => a + b, 0)
                             return (
                                 <div key={teacher.id} className="flex flex-col gap-10">
-                                    <p className="font-semibold text-gray-700">{teacher.lastName} {teacher.firstName}</p>
+                                    <p className="font-semibold text-lg text-gray-700">{teacher.lastName} {teacher.firstName}</p>
                                     <table className="w-full text-sm">
                                         <thead>
                                             <tr className="text-left text-gray-400 border-b border-gray-100">
