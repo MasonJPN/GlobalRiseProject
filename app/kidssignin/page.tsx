@@ -104,7 +104,7 @@ const ADMIN_PASSWORD = "1234"
 
 
   return (
-    <div className="min-h-screen bg-[#ffffff] p-8">
+    <div className="min-h-screen bg-[#d2f7fd] p-8">
 
       <div>
         <Link href="/" className="absolute top-6 left-6 text-gray-600 hover:text-gray-900 font-medium text-xl">
@@ -140,7 +140,7 @@ const ADMIN_PASSWORD = "1234"
                 <button 
                     onClick={() => handleSignOut(kid.id)}
                     className={`px-5 py-2 rounded-xl text-sm font-semibold
-                          ${s === "out" ? "bg-red-500 text-white" : "bg-red-100 text-red-500 hover:bg-red-200"}`}>
+                          ${s === "out" ? "bg-red-500 text-white" : "bg-red-100 text-red-600 hover:bg-red-200"}`}>
                   Sign Out
                 </button>
 

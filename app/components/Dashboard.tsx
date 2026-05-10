@@ -17,7 +17,7 @@ export default function Dashboard(){
 
 
 
-            <div className="flex flex-col items-center gap-10 p-10 " >
+            <div className="flex flex-col items-center gap-10 p-10 font-bold " >
                 <Link href="/kidssignin" className="bg-white h-30 w-110 md:w-200 rounded-3xl flex items-center px-6">
                      <div className="w-15 h-15" /> 
                     <span className="flex-1 text-black text-4xl text-center">KIDS SIGN-IN</span>

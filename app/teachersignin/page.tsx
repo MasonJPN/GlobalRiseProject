@@ -1,9 +1,15 @@
 'use client'
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { db } from "@/lib/firebase"
+import { collection, onSnapshot, addDoc, deleteDoc, doc} from "firebase/firestore"
+
+
+
+
 
 type Teacher = {
-    id: number,
+    id: string,
     lastName: string,
     firstName: string, 
     email: string,
@@ -17,17 +23,14 @@ type TeacherStatus = {
 const ADMIN_USERNAME = "admin"
 const ADMIN_PASSWORD = "1234"
 
-const teachers: Teacher[] = [
-    {id: 1, lastName: "Miyata", firstName: "Hisamu", email: "hisamuArya@gmail.com"},
-    {id: 2, lastName: "Fancher", firstName: "Mason", email: "mfancher02@gmail.com"}
-]
+
 
 export default function TeacherSignIn(){
 
     const [adminMode, setAdminMode] = useState(false)
-    const [teacherList, setTeacherList] = useState<Teacher[]>(teachers)
-    const [teacherStatus, setTeacherStatus] = useState<Record<number, TeacherStatus>>({})
-    const [teachersHours, setTeachersHours] = useState<Record<number, Record<string, number>>>({})
+    const [teacherList, setTeacherList] = useState<Teacher[]>([])
+    const [teacherStatus, setTeacherStatus] = useState<Record<string, TeacherStatus>>({})
+    const [teachersHours, setTeachersHours] = useState<Record<string, Record<string, number>>>({})
     const [currentTime, setCurrentTime] = useState("")
     const [adminModal, setAdminModal] = useState(false)
     const [modalUsername, setModalUsername] = useState("")
@@ -43,14 +46,14 @@ export default function TeacherSignIn(){
         return () => clearInterval(interval)
     }, [])
 
-    function handleClockIn(id: number){
+    function handleClockIn(id: string){
         setTeacherStatus((prev) => ({...prev, [id]: {
             status: "in",
             clockInTime: Date.now()
         }}))
     }
 
-    function handleClockOut(id: number){
+    function handleClockOut(id: string){
         const clockInTime = teacherStatus[id]?.clockInTime
         if (!clockInTime) return
         const hoursWorked = (Date.now() - clockInTime) / 3600000
@@ -75,28 +78,41 @@ export default function TeacherSignIn(){
         }
     }
 
-    function handleAddTeacher(){
-        setTeacherList((prev) => [...prev, {
-            id: Date.now(),
+     async function handleAddTeacher(){
+      await addDoc(collection(db, "GlobalRiseStaff", ), {
             firstName: firstName,
             lastName: lastName,
             email: teacherEmail
-        }])
+        })
         setFirstName("")
         setLastName("")
         setTeacherEmail("")
     }
 
-    function handleRemoveTeacher(id: number){
-        setTeacherList((prev) => prev.filter((t) => t.id !== id))
+     async function handleRemoveTeacher(id: string){
+        await deleteDoc(doc(db, "GlobalRiseStaff", id))
     }
 
     function handleAdminLogout(){
         setAdminMode(false)
     }
 
+
+
+    useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "GlobalRiseStaff"), (snapshot) => {
+        const teachersData = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data()
+        })) as Teacher[]
+        setTeacherList(teachersData)
+    })
+    return () => unsubscribe()
+}, [])
+
+
     return (
-        <div className="min-h-screen bg-gray-50 p-8">
+        <div className="min-h-screen bg-[#d2f7fd] p-8">
 
             <Link href="/" className="absolute top-6 left-6 text-gray-600 hover:text-gray-900 font-medium text-xl">
                 ← Back
@@ -107,14 +123,14 @@ export default function TeacherSignIn(){
 
             <div className="text-center mb-16 mt-10">
                 <p className="text-8xl font-bold text-gray-800 tracking-widest">{currentTime}</p>
-                <p className="text-gray-400 mt-2 text-lg">{new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
+                <p className="text-gray-700 mt-2 text-lg">{new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
             </div>
 
             <div className="max-w-2xl mx-auto flex flex-col gap-4">
                 {teacherList.map((teacher) => (
                     <div key={teacher.id} className="flex items-center justify-between bg-white rounded-2xl px-6 py-4 shadow-sm border border-gray-100">
                         <div>
-                            <p className="text-xl font-semibold text-gray-800">{teacher.lastName} {teacher.firstName}</p>
+                            <p className="text-2xl font-semibold text-gray-800">{teacher.lastName} {teacher.firstName}</p>
                             <p className="text-sm text-gray-400">{teacherStatus[teacher.id]?.status === "in" ? "🟢 Clocked In" : "⚪ Clocked Out"}</p>
                             {teachersHours[teacher.id] && (
                                 <p className="text-sm text-blue-400 font-medium">
@@ -126,7 +142,7 @@ export default function TeacherSignIn(){
                         <div className="flex gap-3">
                             <button
                                 onClick={() => handleClockIn(teacher.id)}
-                                className={`px-5 py-2 rounded-xl text-sm font-semibold ${
+                                className={`px-4 py-2 md:py-4 md:px-5 rounded-xl  text-sm md:text-lg font-semibold ${
                                     teacherStatus[teacher.id]?.status === "in"
                                         ? "bg-green-500 text-white"
                                         : "bg-green-100 text-green-700 hover:bg-green-200"
@@ -135,7 +151,7 @@ export default function TeacherSignIn(){
                             </button>
                             <button
                                 onClick={() => handleClockOut(teacher.id)}
-                                className={`px-5 py-2 rounded-xl text-sm font-semibold ${
+                                className={` px-4 py-2 md:px-5 md:py-4 rounded-xl text-sm md:text-lg font-semibold ${
                                     teacherStatus[teacher.id]?.status === "out"
                                         ? "bg-red-400 text-white"
                                         : "bg-red-100 text-red-500 hover:bg-red-200"

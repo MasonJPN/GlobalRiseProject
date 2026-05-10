@@ -90,7 +90,7 @@ export default function Drivers(){
     
 
     return (
-        <div className="min-h-screen bg-gray-50 p-8">
+        <div className="min-h-screen bg-[#d2f7fd] p-8">
 
             <Link href="/" className="absolute top-6 left-6 text-gray-600 hover:text-gray-900 font-medium text-xl">
                 ← Back
@@ -128,7 +128,7 @@ export default function Drivers(){
                                 ))}
                                 <button 
                                     onClick={() => handlePickedUp(school.kids)}
-                                    className="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-400 text-white hover:bg-blue-500 m-4">
+                                    className="px-4 py-2 rounded-xl text-lg font-semibold bg-blue-400 text-white hover:bg-blue-500 m-10">
                                     Picked Up
                                 </button>
                             </div>
