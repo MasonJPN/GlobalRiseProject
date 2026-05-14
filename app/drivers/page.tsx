@@ -54,6 +54,13 @@ export default function Drivers(){
     const [modalPassword, setModalPassword] = useState("")
     const [toast, setToast] = useState(false)
     const [toastMsg, setToastMsg] = useState("")
+    const [schoolInput, setSchoolInput] = useState("")
+
+
+
+
+
+
     function handleAdminLogout(){
         setAdminMode(false)
     }
@@ -135,6 +142,23 @@ export default function Drivers(){
                         )}
                     </div>
                 ))}
+                
+
+                // FInish here tmr may 15th
+                {adminMode && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden gap-10 py-9 " >
+                    <label>
+                        Add School
+                    </label>
+                    <input
+                    value={schoolInput}
+                    onChange={((e) => setSchoolInput(e.target.value))}
+                    />
+                </div>
+            )}
+
+
+
 
                 {adminMode ? (
                     <button
@@ -193,6 +217,13 @@ export default function Drivers(){
                  <p className="text-gray-800 font-medium text-2xl">{toastMsg}</p>
             </div>
                     )}
+
+
+
+            
+
+
+
         </div>
     )
 }
