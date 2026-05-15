@@ -55,10 +55,37 @@ export default function Drivers(){
     const [toast, setToast] = useState(false)
     const [toastMsg, setToastMsg] = useState("")
     const [schoolInput, setSchoolInput] = useState("")
+    const [schoolList, setSchoolList] = useState<Driver[]>(schools)
+    const [selectedSchool, setSelectedSchool] = useState("")
+    const [studentFirstName, setStudentFirstName] = useState("")
+    const [studentLastName, setStudentLastName] = useState("")
+    const [studentEmail, setStudentEmail] = useState("")
 
+function handleAddStudent() {
+    if (!selectedSchool || !studentFirstName.trim() || !studentLastName.trim()) return
+    setSchoolList((prev) =>
+        prev.map((school) =>
+            school.id === Number(selectedSchool)
+                ? { ...school, kids: [...school.kids, {
+                    id: Date.now(),
+                    firstName: studentFirstName.trim(),
+                    lastName: studentLastName.trim(),
+                    email: studentEmail.trim()
+                }]}
+                : school
+        )
+    )
+    setStudentFirstName("")
+    setStudentLastName("")
+    setStudentEmail("")
+    setSelectedSchool("")
+}
 
-
-
+    function handleSubmitSchool(){
+        if(!schoolInput.trim()) return
+        setSchoolList((prev) => [...prev, {id: Date.now(), schoolName: schoolInput.trim(), kids: []}])
+        setSchoolInput("")
+    }
 
 
     function handleAdminLogout(){
@@ -108,7 +135,7 @@ export default function Drivers(){
             </h1>
 
             <div className="max-w-2xl mx-auto flex flex-col gap-8">
-                {schools.map((school) => (
+                {schoolList.map((school) => (
                     <div key={school.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden gap-10 py-9 ">
                         <button
                             onClick={() => setOpenedSchool(openedSchool === school.id ? null : school.id)}
@@ -144,17 +171,62 @@ export default function Drivers(){
                 ))}
                 
 
-                // FInish here tmr may 15th
+                
                 {adminMode && (
+            <div className="gap-10">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden gap-10 py-9 " >
                     <label>
-                        Add School
+                        Add New School
                     </label>
                     <input
                     value={schoolInput}
                     onChange={((e) => setSchoolInput(e.target.value))}
                     />
+                    <button onClick={handleSubmitSchool}>
+                        Submit
+                    </button>
                 </div>
+
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden gap-10 py-9 " >
+                    <label>
+                    Add Student to School
+                    </label>
+                    <select
+                    value={selectedSchool}
+                    onChange={((e) => setSelectedSchool(e.target.value))}
+                    >
+                     {schoolList.map((school) => {
+                        return (
+                        <option key={school.id} value={school.id}>
+                            {school.schoolName}
+                        </option>
+                     )})}
+                    </select>
+                    <label>
+                        First Name: 
+                    </label>
+                    <input
+                        value={studentFirstName}
+                        onChange={((e) => setStudentFirstName(e.target.value))}
+                        />
+                    <label>
+                        Last Name:
+                    </label>
+                    <input
+                        value={studentLastName}
+                        onChange={((e) => setStudentLastName(e.target.value))}
+                    />
+                    <label>
+                        Parent Email:
+                    </label>
+                    <input
+                    value={studentEmail}
+                    onChange={((e) => setStudentEmail(e.target.value))}
+                    />
+                    <button onClick={handleAddStudent}>Submit</button>
+                </div>
+
+            </div>
             )}
 
 
