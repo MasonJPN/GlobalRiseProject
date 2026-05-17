@@ -29,7 +29,7 @@ const ADMIN_PASSWORD = "1234"
   const [studentEmail, setStudentEmail] = useState("")
   const [toast, setToast] = useState(false)
   const [toastMsg, setToastMsg] = useState("")
-
+  const [searchInput, setSearchInput] = useState("")
 
 //This is sign in / out for kids
   function handleSignIn(id: string){
@@ -61,6 +61,8 @@ const ADMIN_PASSWORD = "1234"
   }
 
   async function handleRemoveStudent(id:string ){
+    const confirmed = window.confirm("Are you sure you want to delete this student?")
+    if (!confirmed) return 
     await deleteDoc(doc(db, "GlobalRise Students", id))
   }
 
@@ -99,7 +101,10 @@ const ADMIN_PASSWORD = "1234"
 
 
 
-
+  const filteredKids = kidsList.filter((kid) => 
+    kid.firstName.toLowerCase().includes(searchInput.toLowerCase()) ||
+    kid.lastName.toLowerCase().includes(searchInput.toLowerCase())
+  )
 
 
 
@@ -114,12 +119,29 @@ const ADMIN_PASSWORD = "1234"
 
 
 
-      <h1 className="text-6xl font-bold text-center text-gray-800 mb-20 mt-10">
-        Hello / こんにちは!
-      </h1>
+          <h1 className="text-6xl font-bold text-center text-gray-800 mb-20 mt-10">
+            Hello / こんにちは!
+          </h1>
+
+         
 
       <div className="max-w-2xl mx-auto flex flex-col gap-10">
-        {kidsList.map(kid => {
+
+        <div>
+           
+           <input
+            value={searchInput}
+            onChange={((e) => setSearchInput(e.target.value))}
+            placeholder="Search by name..."
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white text-3xl"
+            />
+        </div>
+
+
+
+
+
+        {filteredKids.map(kid => {
           const s = status[kid.id]
           return (
             <div
@@ -157,7 +179,7 @@ const ADMIN_PASSWORD = "1234"
 
 
         {editMode && (
-        <div className="bg-white rounded-2xl w-220 mt-20 px-6 py-4 shadow-sm border border-gray-300 flex items-center gap-4 text-black">
+        <div className="bg-white rounded-2xl w-220  mt-20 px-6 py-4 shadow-sm border border-gray-300 flex items-center gap-4 text-black">
              <input
                  placeholder="First Name"
                  value={firstName}

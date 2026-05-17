@@ -4,10 +4,6 @@ import Link from "next/link"
 import { db } from "@/lib/firebase"
 import { collection, onSnapshot, addDoc, deleteDoc, doc} from "firebase/firestore"
 
-
-
-
-
 type Teacher = {
     id: string,
     lastName: string,
@@ -23,14 +19,11 @@ type TeacherStatus = {
 const ADMIN_USERNAME = "admin"
 const ADMIN_PASSWORD = "1234"
 
-
-
 export default function TeacherSignIn(){
 
     const [adminMode, setAdminMode] = useState(false)
     const [teacherList, setTeacherList] = useState<Teacher[]>([])
     const [teacherStatus, setTeacherStatus] = useState<Record<string, TeacherStatus>>({})
-    const [teachersHours, setTeachersHours] = useState<Record<string, Record<string, number>>>({})
     const [currentTime, setCurrentTime] = useState("")
     const [adminModal, setAdminModal] = useState(false)
     const [modalUsername, setModalUsername] = useState("")
@@ -38,12 +31,35 @@ export default function TeacherSignIn(){
     const [firstName, setFirstName] = useState("")
     const [lastName, setLastName] = useState("")
     const [teacherEmail, setTeacherEmail] = useState("")
+    const [clockSessions, setClockSessions] = useState<{teacherId: string, date: string, hoursWorked: number, payPeriod: string}[]>([])
+    const [selectedPayPeriod, setSelectedPayPeriod] = useState("")
 
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentTime(new Date().toLocaleTimeString())
         }, 1000)
         return () => clearInterval(interval)
+    }, [])
+
+    useEffect(() => {
+        const unsubscribe = onSnapshot(collection(db, "GlobalRiseStaffTimeCollection"), (snapshot) => {
+            const sessions = snapshot.docs.map((doc) => ({
+                ...doc.data()
+            })) as {teacherId: string, date: string, hoursWorked: number, payPeriod: string}[]
+            setClockSessions(sessions)
+        })
+        return () => unsubscribe()
+    }, [])
+
+    useEffect(() => {
+        const unsubscribe = onSnapshot(collection(db, "GlobalRiseStaff"), (snapshot) => {
+            const teachersData = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data()
+            })) as Teacher[]
+            setTeacherList(teachersData)
+        })
+        return () => unsubscribe()
     }, [])
 
     function handleClockIn(id: string){
@@ -53,18 +69,28 @@ export default function TeacherSignIn(){
         }}))
     }
 
-    function handleClockOut(id: string){
+    function getPayPeriod(date: Date) {
+        const day = date.getDate()
+        const year = date.getFullYear()
+        const month = date.getMonth()
+        if (day >= 15) {
+            return new Date(year, month, 15).toLocaleDateString("en-CA")
+        } else {
+            return new Date(year, month - 1, 15).toLocaleDateString("en-CA")
+        }
+    }
+
+    async function handleClockOut(id: string) {
         const clockInTime = teacherStatus[id]?.clockInTime
         if (!clockInTime) return
         const hoursWorked = (Date.now() - clockInTime) / 3600000
         const today = new Date().toLocaleDateString("en-CA")
-        setTeachersHours((prev) => ({
-            ...prev,
-            [id]: {
-                ...prev[id],
-                [today]: (prev[id]?.[today] || 0) + hoursWorked
-            }
-        }))
+        await addDoc(collection(db, "GlobalRiseStaffTimeCollection"), {
+            teacherId: id,
+            date: today,
+            hoursWorked: hoursWorked,
+            payPeriod: getPayPeriod(new Date())
+        })
         setTeacherStatus((prev) => ({...prev, [id]: {
             status: "out",
             clockInTime: null
@@ -78,8 +104,8 @@ export default function TeacherSignIn(){
         }
     }
 
-     async function handleAddTeacher(){
-      await addDoc(collection(db, "GlobalRiseStaff", ), {
+    async function handleAddTeacher(){
+        await addDoc(collection(db, "GlobalRiseStaff"), {
             firstName: firstName,
             lastName: lastName,
             email: teacherEmail
@@ -89,7 +115,7 @@ export default function TeacherSignIn(){
         setTeacherEmail("")
     }
 
-     async function handleRemoveTeacher(id: string){
+    async function handleRemoveTeacher(id: string){
         await deleteDoc(doc(db, "GlobalRiseStaff", id))
     }
 
@@ -97,19 +123,7 @@ export default function TeacherSignIn(){
         setAdminMode(false)
     }
 
-
-
-    useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "GlobalRiseStaff"), (snapshot) => {
-        const teachersData = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data()
-        })) as Teacher[]
-        setTeacherList(teachersData)
-    })
-    return () => unsubscribe()
-}, [])
-
+    const payPeriods = [...new Set(clockSessions.map((s) => s.payPeriod))]
 
     return (
         <div className="min-h-screen bg-[#d2f7fd] p-8">
@@ -117,9 +131,6 @@ export default function TeacherSignIn(){
             <Link href="/" className="absolute top-6 left-6 text-gray-600 hover:text-gray-900 font-medium text-xl">
                 ← Back
             </Link>
-
-            
-            
 
             <div className="text-center mb-16 mt-10">
                 <p className="text-8xl font-bold text-gray-800 tracking-widest">{currentTime}</p>
@@ -132,17 +143,11 @@ export default function TeacherSignIn(){
                         <div>
                             <p className="text-2xl font-semibold text-gray-800">{teacher.lastName} {teacher.firstName}</p>
                             <p className="text-sm text-gray-400">{teacherStatus[teacher.id]?.status === "in" ? "🟢 Clocked In" : "⚪ Clocked Out"}</p>
-                            {teachersHours[teacher.id] && (
-                                <p className="text-sm text-blue-400 font-medium">
-                                    Total: {Object.values(teachersHours[teacher.id]).reduce((a, b) => a + b, 0).toFixed(2)} hrs
-                                </p>
-                            )}
                         </div>
-
                         <div className="flex gap-3">
                             <button
                                 onClick={() => handleClockIn(teacher.id)}
-                                className={`px-4 py-2 md:py-4 md:px-5 rounded-xl  text-sm md:text-lg font-semibold ${
+                                className={`px-4 py-2 md:py-4 md:px-5 rounded-xl text-sm md:text-lg font-semibold ${
                                     teacherStatus[teacher.id]?.status === "in"
                                         ? "bg-green-500 text-white"
                                         : "bg-green-100 text-green-700 hover:bg-green-200"
@@ -151,7 +156,7 @@ export default function TeacherSignIn(){
                             </button>
                             <button
                                 onClick={() => handleClockOut(teacher.id)}
-                                className={` px-4 py-2 md:px-5 md:py-4 rounded-xl text-sm md:text-lg font-semibold ${
+                                className={`px-4 py-2 md:px-5 md:py-4 rounded-xl text-sm md:text-lg font-semibold ${
                                     teacherStatus[teacher.id]?.status === "out"
                                         ? "bg-red-400 text-white"
                                         : "bg-red-100 text-red-500 hover:bg-red-200"
@@ -171,12 +176,27 @@ export default function TeacherSignIn(){
 
                 {adminMode && (
                     <div className="bg-white rounded-2xl px-6 py-6 shadow-sm border border-gray-100 flex flex-col gap-4">
-                        <h2 className="text-xl font-bold text-gray-800"> Teacher Hours Breakdown</h2>
+                        <h2 className="text-xl font-bold text-gray-800">Teacher Hours Breakdown</h2>
+                        <select
+                            value={selectedPayPeriod}
+                            onChange={(e) => setSelectedPayPeriod(e.target.value)}
+                            className="border border-gray-200 rounded-xl px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                        >
+                            <option value="">All periods</option>
+                            {payPeriods.map((period) => (
+                                <option key={period} value={period}>
+                                    {period}
+                                </option>
+                            ))}
+                        </select>
                         {teacherList.map((teacher) => {
-                            const days = teachersHours[teacher.id] || {}
-                            const total = Object.values(days).reduce((a, b) => a + b, 0)
+                            const sessions = clockSessions.filter((s) =>
+                                s.teacherId === teacher.id &&
+                                (selectedPayPeriod === "" || s.payPeriod === selectedPayPeriod)
+                            )
+                            const total = sessions.reduce((a, b) => a + b.hoursWorked, 0)
                             return (
-                                <div key={teacher.id} className="flex flex-col gap-10">
+                                <div key={teacher.id} className="flex flex-col gap-2">
                                     <p className="font-semibold text-lg text-gray-700">{teacher.lastName} {teacher.firstName}</p>
                                     <table className="w-full text-sm">
                                         <thead>
@@ -186,10 +206,10 @@ export default function TeacherSignIn(){
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {Object.entries(days).map(([date, hours]) => (
-                                                <tr key={date} className="border-b border-gray-50">
-                                                    <td className="py-1 text-gray-600">{date}</td>
-                                                    <td className="py-1 text-gray-600">{hours.toFixed(2)} hrs</td>
+                                            {sessions.map((session, i) => (
+                                                <tr key={i} className="border-b border-gray-50">
+                                                    <td className="py-1 text-gray-600">{session.date}</td>
+                                                    <td className="py-1 text-gray-600">{session.hoursWorked.toFixed(2)} hrs</td>
                                                 </tr>
                                             ))}
                                             <tr className="font-semibold text-blue-400">

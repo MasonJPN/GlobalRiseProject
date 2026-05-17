@@ -172,59 +172,65 @@ function handleAddStudent() {
                 
 
                 
-                {adminMode && (
-            <div className="gap-10">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden gap-10 py-9 " >
-                    <label>
-                        Add New School
-                    </label>
-                    <input
-                    value={schoolInput}
-                    onChange={((e) => setSchoolInput(e.target.value))}
-                    />
-                    <button onClick={handleSubmitSchool}>
-                        Submit
-                    </button>
-                </div>
+                    {adminMode && (
+                <div className="flex flex-col gap-6">
 
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden gap-10 py-9 " >
-                    <label>
-                    Add Student to School
-                    </label>
-                    <select
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
+                <h2 className="text-xl font-semibold text-gray-800">Add New School</h2>
+                <input
+                    value={schoolInput}
+                    onChange={(e) => setSchoolInput(e.target.value)}
+                    placeholder="e.g. 花見川第一小学校"
+                    className="border border-gray-200 rounded-xl px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                />
+                <button
+                    onClick={handleSubmitSchool}
+                    className="self-end px-5 py-2 bg-blue-400 text-white rounded-xl font-semibold hover:bg-blue-500">
+                    Add School
+                </button>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
+                <h2 className="text-xl font-semibold text-gray-800">Add Student to School</h2>
+                <select
                     value={selectedSchool}
-                    onChange={((e) => setSelectedSchool(e.target.value))}
-                    >
-                     {schoolList.map((school) => {
-                        return (
+                    onChange={(e) => setSelectedSchool(e.target.value)}
+                    className="border border-gray-200 rounded-xl px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                >
+                    <option value="" disabled>Select school...</option>
+                    {schoolList.map((school) => (
                         <option key={school.id} value={school.id}>
                             {school.schoolName}
                         </option>
-                     )})}
-                    </select>
-                    <label>
-                        First Name: 
-                    </label>
-                    <input
-                        value={studentFirstName}
-                        onChange={((e) => setStudentFirstName(e.target.value))}
-                        />
-                    <label>
-                        Last Name:
-                    </label>
+                    ))}
+                </select>
+                <div className="flex gap-3">
                     <input
                         value={studentLastName}
-                        onChange={((e) => setStudentLastName(e.target.value))}
+                        onChange={(e) => setStudentLastName(e.target.value)}
+                        placeholder="Last name"
+                        className="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300"
                     />
-                    <label>
-                        Parent Email:
-                    </label>
                     <input
-                    value={studentEmail}
-                    onChange={((e) => setStudentEmail(e.target.value))}
+                        value={studentFirstName}
+                        onChange={(e) => setStudentFirstName(e.target.value)}
+                        placeholder="First name"
+                        className="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300"
                     />
-                    <button onClick={handleAddStudent}>Submit</button>
                 </div>
+                <input
+                    value={studentEmail}
+                    onChange={(e) => setStudentEmail(e.target.value)}
+                    placeholder="Parent email"
+                    className="border border-gray-200 rounded-xl px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                />
+                                <button
+                             onClick={handleAddStudent}
+                             className="self-end px-5 py-2 bg-blue-400 text-white rounded-xl font-semibold hover:bg-blue-500">
+                             Add Student
+                        </button>
+                     </div>
+
 
             </div>
             )}
